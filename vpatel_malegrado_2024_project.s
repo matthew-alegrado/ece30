@@ -50,14 +50,14 @@ FindTail:
 
 loop:	
 	ldur x2, [x0, #16]
-	SUBIS XZR, X2, #-1 //compare X2 to -1
-	B.EQ tailfound
+	subis XZR, X2, #-1 //compare X2 to -1
+	b.eq tailfound
 	
-	ADDI x0, [x0, #16]
+	addi x0, [x0, #16]
 	B loop
 
 tailfound:
-	STUR x1, [x0, #0]
+	stur x1, [x0, #0]
 	br lr
 
 
@@ -74,7 +74,7 @@ FindMidpoint:
 	// x3: sum of the frequency of the right sub-array
 loop:    
 	ADD X5,[X0,#16]
-	SUBIS x7, x5, x1     # Compare x5 with x1, setting flags
+	SUBS x7, x5, x1     # Compare x5 with x1, setting flags
     BEQ TailFound        # if (head + 2 == tail) goto TailFound
 	
 	SUBS X6, X2, X3		 # SUBTRACT the two, if greater brach to tail and then tranch to head 
@@ -85,17 +85,14 @@ UpdateTail:
     ADDI x0, [x0, #16]
 	LDUR x7, [x0,#8]      # head = head + 2
     ADD x2, x2, x7        # left sum = left sum + *(head)
-	B ContinueRecursion   # goto ContinueRecursion
+	BL loop       # Recursive call to FindMidpoint
 
 UpdateHead:
 	ADDI x1, [x1, #16]
 	LDUR x7, [x1,#8]      # head = head + 2
     ADD x3, x3, x7        # left sum = left sum + *(head)
-    B ContinueRecursion   # goto ContinueRecursion
-
-ContinueRecursion:
     BL loop       # Recursive call to FindMidpoint
-
+	
 	// output:
 	// x4: address of (pointer to) the first element of the right-hand side sub-array
 ReturnTail:
