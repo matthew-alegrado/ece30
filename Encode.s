@@ -41,14 +41,14 @@ Encode:
     subs xzr, x3, xzr   // check if x3 = 1 or x3 = 0
     b.eq Encode_0       // if return value of IsContain is 0, go to Encode_0
     putint xzr          // print 0
-    addi x0, x9, xzr    // set first function argument to left_node
+    add x0, x9, xzr    // set first function argument to left_node
     bl Encode           // call Encode(left_node, symbol)
     b Encode_end        // jump to end procedure
 
 Encode_0:
     addi x11, xzr, #1   // x1 <- #1
     putint x11          // print 1
-    addi x0, x10, xzr   // set first function argument to right_node
+    add x0, x10, xzr   // set first function argument to right_node
     bl Encode           // call Encode(right_node, symbol)
 
 Encode_end:
