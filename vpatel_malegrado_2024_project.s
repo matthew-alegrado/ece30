@@ -58,7 +58,7 @@ loop:
 	B loop
 
 tailfound:
-    stur x1, [x0, #0]   // Store the address of the last symbol
+    stur x1, [x2, #0]   // Store the address of the last symbol
     BR lr               // Return
 
 
