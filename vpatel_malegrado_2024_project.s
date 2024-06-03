@@ -49,13 +49,13 @@ FindTail:
 	// x1: address of (pointer to) the first symbol of symbol array
     subi x3, xzr, #1      // Load -1 into register x2 by subtracting 1 from 0
 
-loop:	
+FindTail_loop:
 	ldur x2, [x0, #16]
 	subs x4, x2, x3       // Subtract x2 from x3 (symbol) to check if it's -1
 	b.eq tailfound
 	
 	addi x0, [x0, #16]
-	B loop
+	B FindTail_loop
 
 tailfound:
     stur x1, [x2, #0]   // Store the address of the last symbol
@@ -74,7 +74,7 @@ FindMidpoint:
 	// x1: address of (pointer to) the last symbol of the symbol array
 	// x2: sum of the frequency of the left sub-array
 	// x3: sum of the frequency of the right sub-array
-loop:    
+FindMidpoint_loop:
 	ADD X5,[X0,#16]
 	SUBS x7, x5, x1     # Compare x5 with x1, setting flags
     B.EQ TailFound        # if (head + 2 == tail) goto TailFound
@@ -87,13 +87,13 @@ UpdateTail:
     ADDI x0, [x0, #16]
 	LDUR x7, [x0,#8]      # head = head + 2
     ADD x2, x2, x7        # left sum = left sum + *(head)
-	BL loop       # Recursive call to FindMidpoint
+	BL FindMidpoint_loop       # Recursive call to FindMidpoint
 
 UpdateHead:
 	ADDI x1, [x1, #16]
 	LDUR x7, [x1,#8]      # head = head + 2
     ADD x3, x3, x7        # left sum = left sum + *(head)
-    BL loop       # Recursive call to FindMidpoint
+    BL FindMidpoint_loop       # Recursive call to FindMidpoint
 	
 	// output:
 	// x4: address of (pointer to) the first element of the right-hand side sub-array
@@ -122,9 +122,9 @@ Partition:
 	// x13: offset * 4
 
 	// callee start procedure
-    subi sp, sp, #48    // allocate
+    subi sp, sp, #56    // allocate
     stur fp, [sp, #0]   // save old fp
-    addi fp, sp, #40    // set new fp
+    addi fp, sp, #16    // set new fp
     stur lr, [sp, #8]   // save return address
 
     // function
@@ -136,16 +136,16 @@ Partition:
     // else branch:
 
     // Save temp regs before calling FindMidpoint
-    stur x0, [fp, #0]   // store x0 (variable 'start') at fp[0]
-    stur x1, [fp, #8]   // store x1 (variable 'end') at fp[1]
-    stur x2, [fp, #16]  // store x2 (variable 'node') at fp[2]
+    stur x0, [sp, #16]   // store x0 (variable 'start') at fp[0]
+    stur x1, [sp, #24]   // store x1 (variable 'end') at fp[1]
+    stur x2, [sp, #32]  // store x2 (variable 'node') at fp[2]
     ldur x2, [x0, #8]   // l_sum <- *(start + 1)
     ldur x3, [x1, #8]   // r_sum <- *(end + 1)
     bl FindMidpoint     // midpoint = x4 <- FindMidpoint(.)
 
-    ldur x0, [fp, #0]   // load pre-call x0 value
-    ldur x1, [fp, #8]   // load pre-call x1 value
-    ldur x2, [fp, #16]  // load pre-call x2 value
+    ldur x0, [sp, #16]   // load pre-call x0 value
+    ldur x1, [sp, #24]   // load pre-call x1 value
+    ldur x2, [sp, #32]  // load pre-call x2 value
 
     sub x10, x4, x0     // x10 = offset <- midpoint - start
     subi x10, x20, #1   // x10--
@@ -161,18 +161,18 @@ Partition:
     stur x12, [x2, #24] // *(node + 3) <- right_node
 
     // Store variables before Partition(start, midpoint-2, left_node)
-    stur x1, [fp, #0]   // store x1 (variable 'end') at fp[0]
-    stur x4, [fp, #8]   // store variable 'midpoint' at fp[1]
-    stur x12, [fp, #16] // store right_node variable at fp[2]
+    stur x1, [sp, #16]   // store x1 (variable 'end')
+    stur x4, [sp, #24]   // store variable 'midpoint'
+    stur x12, [sp, #32] // store right_node variable
 
     subi x1, x4, #2     // x1 = midpoint - 2 (second arg to partition)
     addi x2, x11, #0    // left_node = arg2, for partition
     bl Partition
 
     // Partition(midpoint, end, right_node)
-    ldur x0, [fp, #8]   // load 'midpoint' into arg0
-    ldur x1, [fp, #0]   // load 'end' into arg1
-    ldur x2, [fp, #16]  // load 'right_node' into arg2
+    ldur x0, [sp, #24]   // load 'midpoint' into arg0
+    ldur x1, [sp, #16]   // load 'end' into arg1
+    ldur x2, [sp, #32]  // load 'right_node' into arg2
 
     bl Partition
     b Partition_end     // skip to end
@@ -218,12 +218,11 @@ IsContain:
 	// x9/x10: first/second char value
 IsContain_while:
 	subs xzr, x1, x0        // compare start and end values
-	b.gt IsContain_false    // exit while loop if start > end
+	b.lt IsContain_false    // exit while loop if start > end
 	ldurb x9, [x0, #0]      // retrieve 1 byte, first char
-	ldurb x10, [x1, #0]     // retrieve second char
-	subs xzr, x10, x9       // compare the two chars
+	subs xzr, x2, x9       // compare the two chars
 	b.eq IsContain_matching // if chars match, jump
-	addi x0, x0, 2          // increment start by 2
+	addi x0, x0, #2          // increment start by 2
 	b IsContain_while       // return to top of while loop
 
 
@@ -232,7 +231,7 @@ IsContain_matching:
     b IsContain_end
 
 IsContain_false:
-    addi x3, x3, #0     // return value set to 1
+    addi x3, xzr, #0     // return value set to 1
     b IsContain_end
 
 // handle callee end procedures
@@ -244,14 +243,15 @@ IsContain_end:
 	br lr
 
 
+
 ////////////////////////
 //                    //
 //   Encode           //
 //                    //
 ////////////////////////
-Encode:	
+Encode:
 	// input:
-	// x0: the address of (pointer to) the binary tree node 
+	// x0: the address of (pointer to) the binary tree node
 	// x2: symbol to encode
 
     // registers:
@@ -260,9 +260,9 @@ Encode:
     // x11: #1 (for printing)
 
     // callee start procedure
-    subi sp, sp, #48    // allocate
+    subi sp, sp, #56    // allocate
     stur fp, [sp, #0]   // save old fp
-    addi fp, sp, #40    // set new fp
+    addi fp, sp, #48    // set new fp
     stur lr, [sp, #8]   // save return address
 
     // function
@@ -275,36 +275,37 @@ Encode:
     // start = *left_node, end = *(left_node + 1), symbol = symbol
 
     // IsContain(*start, *end, symbol)
-    stur x0, [fp, #0]   // save current node (x0) at fp[0]
-    stur x2, [fp, #8]   // save current symbol (x2) at fp[1]
-    stur x9, [fp, #16]  // save left node (x9) at fp[2]
-    stur x10, [fp, #24] // save right node (10) at f[3]
-    ldur x0, [x9, #0]   // dereference pointer to start
-    ldur x1, [x9, #8]   // dereference pointer to end
+    stur x0, [sp, #16]   // save current node (x0) at sp[2]
+    stur x2, [sp, #24]   // save current symbol (x2) at sp[3]
+    stur x9, [sp, #32]  // save left node (x9) at sp[4]
+    stur x10, [sp, #40] // save right node (10) at sp[5]
+    ldur x0, [x9, #0]   // *left_node function arg
+    ldur x1, [x9, #8]   // *(left_node + 1) function arg
     bl IsContain
 
     // Load variables that we saved
-    ldur x0, [fp, #0]
-    ldur x2, [fp, #8]
-    ldur x9, [fp, #16]
-    ldur x10, [fp, #24]
+    ldur x0, [sp, #16]
+    ldur x2, [sp, #24]
+    ldur x9, [sp, #32]
+    ldur x10, [sp, #40]
 
     subs xzr, x3, xzr   // check if x3 = 1 or x3 = 0
     b.eq Encode_0       // if return value of IsContain is 0, go to Encode_0
     putint xzr          // print 0
-    addi x0, x9, xzr    // set first function argument to left_node
+    add x0, x9, xzr     // set first function argument to left_node
     bl Encode           // call Encode(left_node, symbol)
     b Encode_end        // jump to end procedure
 
 Encode_0:
     addi x11, xzr, #1   // x1 <- #1
     putint x11          // print 1
-    addi x0, x10, xzr   // set first function argument to right_node
+    add x0, x10, xzr   // set first function argument to right_node
     bl Encode           // call Encode(right_node, symbol)
 
 Encode_end:
     ldur lr, [sp, #8]   // load return address
     ldur fp, [sp, #0]   // load old fp
-    addi sp, sp, #48    // deallocate stack frame
+    addi sp, sp, #56    // deallocate stack frame
 
 	br lr
+
