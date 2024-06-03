@@ -58,10 +58,7 @@ loop:
 	B loop
 
 tailfound:
-    ldur x0, [sp, #0]   // Load x0 from the stack
-    addi sp, sp, #8     // Deallocate space on the stack
-
-    stur x1, [x0, #0]   // Store the address of the last symbol
+    stur x1, [x2, #0]   // Store the address of the last symbol
     BR lr               // Return
 
 
