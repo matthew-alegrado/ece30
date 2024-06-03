@@ -47,10 +47,11 @@ FindTail:
 	// x0: address of (pointer to) the first symbol of symbol array
 	// output:
 	// x1: address of (pointer to) the first symbol of symbol array
+    sub x3, xzr, #1      // Load -1 into register x2 by subtracting 1 from 0
 
 loop:	
 	ldur x2, [x0, #16]
-	subis XZR, X2, #-1 //compare X2 to -1
+	subs x4, x2, x3       // Subtract x2 from x3 (symbol) to check if it's -1
 	b.eq tailfound
 	
 	addi x0, [x0, #16]
