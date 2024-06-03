@@ -47,7 +47,7 @@ FindTail:
 	// x0: address of (pointer to) the first symbol of symbol array
 	// output:
 	// x1: address of (pointer to) the first symbol of symbol array
-    sub x3, xzr, #1      // Load -1 into register x2 by subtracting 1 from 0
+    subi x3, xzr, #1      // Load -1 into register x2 by subtracting 1 from 0
 
 loop:	
 	ldur x2, [x0, #16]
