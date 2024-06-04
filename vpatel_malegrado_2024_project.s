@@ -47,6 +47,13 @@ FindTail:
 	// x0: address of (pointer to) the first symbol of symbol array
 	// output:
 	// x1: address of (pointer to) the first symbol of symbol array
+
+	// callee start procedure
+    subi sp, sp, #56    // allocate
+    stur fp, [sp, #0]   // save old fp
+    addi fp, sp, #16    // set new fp
+    stur lr, [sp, #8]   // save return address
+
     subi x3, xzr, #1      // Load -1 into register x2 by subtracting 1 from 0
 
 FindTail_loop:
@@ -59,6 +66,12 @@ FindTail_loop:
 
 tailfound:
     stur x1, [x2, #0]   // Store the address of the last symbol
+
+    // handle callee end procedures
+    ldur lr, [sp, #8]   // load return address
+    ldur fp, [sp, #0]   // load old fp
+    addi sp, sp, #56    // deallocate stack frame
+
     BR lr               // Return
 
 
@@ -75,6 +88,11 @@ FindMidpoint:
 	// x2: sum of the frequency of the left sub-array
 	// x3: sum of the frequency of the right sub-array
 
+	// callee start procedure
+    subi sp, sp, #56    // allocate
+    stur fp, [sp, #0]   // save old fp
+    addi fp, sp, #16    // set new fp
+    stur lr, [sp, #8]   // save return address
 
 FindMidpoint_loop:
 	ADDI x5,x0,#16
@@ -100,6 +118,12 @@ UpdateTail:
 	// x4: address of (pointer to) the first element of the right-hand side sub-array
 ReturnTail:
     ADD x4, x1, xzr            # x4 = tail
+
+    // handle callee end procedures
+    ldur lr, [sp, #8]   // load return address
+    ldur fp, [sp, #0]   // load old fp
+    addi sp, sp, #56    // deallocate stack frame
+    
     br lr                 # return	
 
 
@@ -190,7 +214,7 @@ Partition_end:
     // handle callee end procedures
     ldur lr, [sp, #8]   // load return address
     ldur fp, [sp, #0]   // load old fp
-    addi sp, sp, #48    // deallocate stack frame
+    addi sp, sp, #56    // deallocate stack frame
 
 	br lr
 
