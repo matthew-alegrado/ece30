@@ -65,7 +65,7 @@ FindTail_loop:
 	B FindTail_loop
 
 tailfound:
-    stur x1, [x2, #0]   // Store the address of the last symbol
+    addi x1, x0, #0   // Store the address of the last symbol
 
     // handle callee end procedures
     ldur lr, [sp, #8]   // load return address
@@ -95,36 +95,36 @@ FindMidpoint:
     stur lr, [sp, #8]   // save return address
 
 FindMidpoint_loop:
-	ADDI x5,x0,#16
-	SUBS x7, x5, x1     # Compare x5 with x1, setting flags
-    B.EQ ReturnTail        # if (head + 2 == tail) goto TailFound
+	ADDI x5, x0, #16
+	SUBS x7, x5, x1     // Compare x5 with x1, setting flags
+    B.EQ ReturnTail        // if (head + 2 == tail) goto TailFound
 	
-	SUBS X6, X3, X2		 # SUBTRACT the two, if greater brach to tail and then tranch to head 
-    B.LT UpdateTail      # if (left sum <= right sum) goto UpdateHead
+	SUBS X6, X3, X2		 // SUBTRACT the two, if greater brach to tail and then tranch to head
+    B.LT UpdateTail     // if (left sum <= right sum) goto UpdateHead
 
 UpdateHead:
-    ADDI x0, x0, #16      # head = head + 2
+    ADDI x0, x0, #16      // head = head + 2
 	LDUR x7, x0,#8      
-    ADD x2, x2, x7        # left sum = left sum + *(head)
-	BL FindMidpoint_loop       # Recursive call to FindMidpoint
+    ADD x2, x2, x7        // left sum = left sum + *(head)
+	BL FindMidpoint_loop       // Recursive call to FindMidpoint
 
 UpdateTail:
 	SUBI x1, x1, #16
-	LDUR x7, x1,#8      # head = head + 2
-    ADD x3, x3, x7        # left sum = left sum + *(head)
-    BL FindMidpoint_loop       # Recursive call to FindMidpoint
+	LDUR x7, x1,#8      // head = head + 2
+    ADD x3, x3, x7        // left sum = left sum + *(head)
+    BL FindMidpoint_loop       // Recursive call to FindMidpoint
 	
 	// output:
 	// x4: address of (pointer to) the first element of the right-hand side sub-array
 ReturnTail:
-    ADD x4, x1, xzr            # x4 = tail
+    ADD x4, x1, xzr            // x4 = tail
 
     // handle callee end procedures
     ldur lr, [sp, #8]   // load return address
     ldur fp, [sp, #0]   // load old fp
     addi sp, sp, #56    // deallocate stack frame
-    
-    br lr                 # return	
+
+    br lr                 // return
 
 
 ////////////////////////
@@ -155,7 +155,7 @@ Partition:
     // function
     stur x0, [x2, #0]   // *node <- start
     stur x1, [x2, #8]   // *(node + 1) <- end
-    subi xzr, x0, x1    // check start - end == 0
+    subs xzr, x0, x1    // check start - end == 0
     b.eq Partition_null
 
     // else branch:
