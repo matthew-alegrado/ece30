@@ -19,6 +19,7 @@ main:	lda x4, symbol
 	addi x2, x1, #24
 	stur x2, [sp, #0]
 	bl Partition
+	// stop    // test partition
 	ldur x0, [sp, #0]
 	lda x5, encode
 	ldur x1, [x5, #0]
@@ -173,13 +174,13 @@ Partition:
     ldur x2, [sp, #32]  // load pre-call x2 value
 
     sub x10, x4, x0     // x10 = offset <- midpoint - start
-    subi x10, x20, #1   // x10--
+    subi x10, x10, #8   // x10-- (address is -8) (CHANGED)
 
-    addi x11, x2, #4    // x11: left_node <- node + 4
-    addi x15, xzr, #4   // x15 = 4
+    addi x11, x2, #32    // x11: left_node <- node + 4
+    addi x15, xzr, #4   // x15 = 4 (actual 4)
 
-    mul x13, x10, x15   // x13 = offset * 4
-    addi x12, x2, #4    // x12 = node + 4
+    lsl x13, x13, #2   // x13 = offset * 4
+    addi x12, x2, #32    // x12 = node + 4
     add x12, x12, x13   // x12 = x12 + offset * 4   (right_node)
 
     stur x11, [x2, #16] // *(node + 2) <- left_node
@@ -190,7 +191,7 @@ Partition:
     stur x4, [sp, #24]   // store variable 'midpoint'
     stur x12, [sp, #32] // store right_node variable
 
-    subi x1, x4, #2     // x1 = midpoint - 2 (second arg to partition)
+    subi x1, x4, #16     // x1 = midpoint - 2 (second arg to partition)
     addi x2, x11, #0    // left_node = arg2, for partition
     bl Partition
 
@@ -294,7 +295,7 @@ Encode:
     ldur x9, [x0, #16]      // left_node <- *(node+2)
     ldur x10, [x0, #24]     // right_node <- *(node+3)
     subs xzr, x9, x10       // check if left_node == right_node
-    b.eq Encode_end         // jump to end if nodes are equal
+    b.eq Encode_end_early         // jump to end if nodes are equal
 
     // nested if statement
     // start = *left_node, end = *(left_node + 1), symbol = symbol
@@ -326,6 +327,10 @@ Encode_0:
     putint x11          // print 1
     add x0, x10, xzr   // set first function argument to right_node
     bl Encode           // call Encode(right_node, symbol)
+
+Encode_end_early:
+    addi x14, xzr, #9
+    putint x14
 
 Encode_end:
     ldur lr, [sp, #8]   // load return address
