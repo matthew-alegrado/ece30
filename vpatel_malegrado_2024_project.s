@@ -47,27 +47,32 @@ FindTail:
 	// input:
 	// x0: address of (pointer to) the first symbol of symbol array
 	// output:
-	// x1: address of (pointer to) the first symbol of symbol array
+	// x1: address of (pointer to) the last symbol of symbol array
 
 	// callee start procedure
     subi sp, sp, #56    // allocate
     stur fp, [sp, #0]   // save old fp
-    addi fp, sp, #16    // set new fp
+    addi fp, sp, #48    // set new fp
     stur lr, [sp, #8]   // save return address
 
     subi x3, xzr, #1      // Load -1 into register x2 by subtracting 1 from 0
 
-FindTail_loop:
 	ldur x2, [x0, #16]
 	subs xzr, x3, x2       // Subtract x2 from x3 (symbol) to check if it's -1
 	b.eq tailfound
-	
+
+	stur x0, [sp, #16]
+	stur x1, [sp, #24]
 	addi x0, [x0, #16]
-	B FindTail_loop
+	BL FindTail
+	b tail_notfound
 
 tailfound:
     addi x1, x0, #0   // Store the address of the last symbol
-
+    b tail_end
+tail_notfound:
+    ldur x0, [sp, #16] // restore x0
+tail_end:
     // handle callee end procedures
     ldur lr, [sp, #8]   // load return address
     ldur fp, [sp, #0]   // load old fp
@@ -92,7 +97,7 @@ FindMidpoint:
 	// callee start procedure
     subi sp, sp, #56    // allocate
     stur fp, [sp, #0]   // save old fp
-    addi fp, sp, #16    // set new fp
+    addi fp, sp, #48    // set new fp
     stur lr, [sp, #8]   // save return address
 
 FindMidpoint_loop:
@@ -150,7 +155,7 @@ Partition:
 	// callee start procedure
     subi sp, sp, #56    // allocate
     stur fp, [sp, #0]   // save old fp
-    addi fp, sp, #16    // set new fp
+    addi fp, sp, #48    // set new fp
     stur lr, [sp, #8]   // save return address
 
     // function
@@ -327,6 +332,7 @@ Encode_0:
     putint x11          // print 1
     add x0, x10, xzr   // set first function argument to right_node
     bl Encode           // call Encode(right_node, symbol)
+    b Encode_end
 
 Encode_end_early:
     addi x14, xzr, #9
