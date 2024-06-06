@@ -107,7 +107,6 @@ FindMidpoint_loop:
 	
 	SUBS X6, X3, X2		 // SUBTRACT the two, if greater brach to tail and then tranch to head
     B.LT UpdateTail     // if (left sum <= right sum) goto UpdateHead
-    bl UpdateHead
 
 UpdateHead:
     ADDI x0, x0, #16      // head = head + 2
