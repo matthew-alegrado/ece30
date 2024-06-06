@@ -189,11 +189,10 @@ Partition:
     subi x10, x10, #8   // x10-- (address is -8) (CHANGED)
 
     addi x11, x2, #32    // x11: left_node <- node + 4
-    addi x15, xzr, #4   // x15 = 4 (actual 4)
 
-    lsl x13, x13, #2   // x13 = offset * 4
+    lsl x10, x10, #2   // x13 = offset * 4
     addi x12, x2, #32    // x12 = node + 4
-    add x12, x12, x13   // x12 = x12 + offset * 4   (right_node)
+    add x12, x12, x10   // x12 = x12 + offset * 4   (right_node)
 
     stur x11, [x2, #16] // *(node + 2) <- left_node
     stur x12, [x2, #24] // *(node + 3) <- right_node
