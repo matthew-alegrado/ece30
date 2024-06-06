@@ -107,18 +107,21 @@ FindMidpoint_loop:
 	
 	SUBS X6, X3, X2		 // SUBTRACT the two, if greater brach to tail and then tranch to head
     B.LT UpdateTail     // if (left sum <= right sum) goto UpdateHead
+    bl UpdateHead
 
 UpdateHead:
     ADDI x0, x0, #16      // head = head + 2
-	LDUR x7, x0,#8      
+	LDUR x7, x0,#8        
     ADD x2, x2, x7        // left sum = left sum + *(head)
-	BL FindMidpoint_loop       // Recursive call to FindMidpoint
+	bl FindMidpoint_loop  // Recursive call to FindMidpoint
+    b FindMidpoint_loop
 
 UpdateTail:
 	SUBI x1, x1, #16
-	LDUR x7, x1,#8      // head = head + 2
+	LDUR x7, x1, #8      // head = head + 2
     ADD x3, x3, x7        // left sum = left sum + *(head)
-    BL FindMidpoint_loop       // Recursive call to FindMidpoint
+    bl FindMidpoint_loop       // Recursive call to FindMidpoint
+    b FindMidpoint_loop
 	
 	// output:
 	// x4: address of (pointer to) the first element of the right-hand side sub-array
@@ -132,6 +135,11 @@ ReturnTail:
 
     br lr                 // return
 
+FindMidpointEnd:
+    // handle callee end procedures
+    ldur lr, [sp, #8]   // load return address
+    ldur fp, [sp, #0]   // load old fp
+    addi sp, sp, #56    // deallocate stack frame
 
 ////////////////////////
 //                    //
