@@ -120,15 +120,17 @@ Encode:
     b Encode_end        // jump to end procedure
 
 Encode_0:
-    addi x11, xzr, #1   // x1 <- #1
+    addi x11, xzr, #1   // x11 <- #1
     putint x11          // print 1
     add x0, x10, xzr   // set first function argument to right_node
     bl Encode           // call Encode(right_node, symbol)
 
 Encode_end:
+    ldur x0, [sp, #16]  // load old node before going to main
     ldur lr, [sp, #8]   // load return address
     ldur fp, [sp, #0]   // load old fp
     addi sp, sp, #56    // deallocate stack frame
+
 
 	br lr
 

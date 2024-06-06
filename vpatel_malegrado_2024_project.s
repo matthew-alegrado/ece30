@@ -300,7 +300,7 @@ Encode:
     ldur x9, [x0, #16]      // left_node <- *(node+2)
     ldur x10, [x0, #24]     // right_node <- *(node+3)
     subs xzr, x9, x10       // check if left_node == right_node
-    b.eq Encode_end_early         // jump to end if nodes are equal
+    b.eq Encode_end         // jump to end if nodes are equal
 
     // nested if statement
     // start = *left_node, end = *(left_node + 1), symbol = symbol
@@ -328,20 +328,16 @@ Encode:
     b Encode_end        // jump to end procedure
 
 Encode_0:
-    addi x11, xzr, #1   // x1 <- #1
+    addi x11, xzr, #1   // x11 <- #1
     putint x11          // print 1
     add x0, x10, xzr   // set first function argument to right_node
     bl Encode           // call Encode(right_node, symbol)
-    b Encode_end
-
-Encode_end_early:
-    addi x14, xzr, #9
-    putint x14
 
 Encode_end:
+    ldur x0, [sp, #16]  // load old node before going to main
     ldur lr, [sp, #8]   // load return address
     ldur fp, [sp, #0]   // load old fp
     addi sp, sp, #56    // deallocate stack frame
 
-	br lr
 
+	br lr
